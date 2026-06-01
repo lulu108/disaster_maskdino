@@ -1,0 +1,31 @@
+_BASE_: ./maskdino_R50_1class.yaml
+
+# 24GB GPU friendly configuration for construction_area instance segmentation.
+# This file keeps the original COCO-pretrained MaskDINO-R50 structure, but reduces
+# memory-heavy training settings for single-GPU RTX 4090D / 24GB environments.
+
+INPUT:
+  IMAGE_SIZE: 512
+  MIN_SCALE: 0.5
+  MAX_SCALE: 1.0
+
+SOLVER:
+  IMS_PER_BATCH: 1
+  BASE_LR: 0.00000625
+  MAX_ITER: 54000
+  STEPS: (44000, 50000)
+  CHECKPOINT_PERIOD: 1000
+
+MODEL:
+  MaskDINO:
+    NUM_OBJECT_QUERIES: 100
+    TRAIN_NUM_POINTS: 4096
+    DN_NUM: 50
+
+DATALOADER:
+  NUM_WORKERS: 2
+
+TEST:
+  EVAL_PERIOD: 1000
+
+OUTPUT_DIR: "output/construction_area_r50_bs1_img512_q100_p4096"
