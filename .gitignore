@@ -1,0 +1,38 @@
+# datasets
+datasets/
+
+# training outputs
+output/
+outputs/
+runs/
+logs/
+results/
+checkpoints/
+weights/
+
+# model weights
+*.pth
+*.pt
+*.pkl
+*.ckpt
+
+# python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# environment
+.venv/
+venv/
+env/
+conda/
+*.egg-info/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
