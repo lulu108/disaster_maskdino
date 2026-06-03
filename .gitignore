@@ -3,7 +3,7 @@ datasets/
 
 # training outputs
 output/
-outputs/
+
 runs/
 logs/
 results/
