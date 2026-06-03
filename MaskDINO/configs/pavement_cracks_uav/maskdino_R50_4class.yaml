@@ -1,0 +1,32 @@
+_BASE_: ../coco/instance-segmentation/maskdino_R50_bs16_50ep_3s.yaml
+
+DATASETS:
+  TRAIN: ("pavement_cracks_uav_train",)
+  TEST: ("pavement_cracks_uav_val",)
+
+MODEL:
+  SEM_SEG_HEAD:
+    NUM_CLASSES: 4
+  MaskDINO:
+    NUM_OBJECT_QUERIES: 100
+    TRAIN_NUM_POINTS: 4096
+    DN_NUM: 50
+
+INPUT:
+  IMAGE_SIZE: 512
+  MAX_SCALE: 1.0
+
+DATALOADER:
+  FILTER_EMPTY_ANNOTATIONS: False
+
+SOLVER:
+  IMS_PER_BATCH: 1
+  BASE_LR: 0.00000625
+  MAX_ITER: 60000
+  STEPS: (48000, 55000)
+  CHECKPOINT_PERIOD: 10000
+
+TEST:
+  EVAL_PERIOD: 5000
+
+OUTPUT_DIR: "output/pavement_cracks_uav_r50_bs1_img512_q100_p4096"
