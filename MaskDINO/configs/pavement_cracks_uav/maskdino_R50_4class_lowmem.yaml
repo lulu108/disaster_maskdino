@@ -1,0 +1,17 @@
+_BASE_: maskdino_R50_4class.yaml
+
+INPUT:
+  MIN_SIZE_TRAIN: (512, 576, 640, 704, 768)
+  MAX_SIZE_TRAIN: 1024
+  MIN_SIZE_TEST: 768
+  MAX_SIZE_TEST: 1024
+  CROP:
+    ENABLED: True
+    TYPE: "absolute_range"
+    SIZE: [512, 512]
+
+SOLVER:
+  IMS_PER_BATCH: 1
+  BASE_LR: 0.00000625
+
+OUTPUT_DIR: "output/pavement_cracks_uav_r50_lowmem_multiscale768_crop512_maskdice6_repeatthin"

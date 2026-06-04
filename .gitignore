@@ -1,14 +1,22 @@
 # datasets
-datasets/
+datasets/*
+!datasets/*.py
+!datasets/tests/
+!datasets/tests/*.py
 
 # training outputs
-output/
-
-runs/
-logs/
-results/
-checkpoints/
-weights/
+output/*
+!output/**/
+runs/**/*.pth
+runs/**/*.pt
+logs/**/*.pth
+logs/**/*.pt
+results/**/*.pth
+results/**/*.pt
+checkpoints/**/*.pth
+checkpoints/**/*.pt
+weights/**/*.pth
+weights/**/*.pt
 
 # model weights
 *.pth

@@ -78,6 +78,7 @@ class DetrDatasetMapper:
 
         self.mask_on = True
         self.tfm_gens = build_transform_gen(cfg, is_train)
+        self.crop_retry = 3
         logging.getLogger(__name__).info(
             "Full TransformGens used in training: {}, crop: {}".format(str(self.tfm_gens), str(self.crop_gen))
         )
@@ -103,8 +104,8 @@ class DetrDatasetMapper:
             if np.random.rand() > 0.5:
                 image, transforms = T.apply_transform_gens(self.tfm_gens, image)
             else:
-                image, transforms = T.apply_transform_gens(
-                    self.tfm_gens[:-1] + self.crop_gen + self.tfm_gens[-1:], image
+                image, transforms = self._apply_crop_with_nonempty_fallback(
+                    image, dataset_dict.get("annotations", [])
                 )
 
         image_shape = image.shape[:2]  # h, w
@@ -139,6 +140,36 @@ class DetrDatasetMapper:
                 gt_masks = instances.gt_masks
                 gt_masks = convert_coco_poly_to_mask(gt_masks.polygons, h, w)
                 instances.gt_masks = gt_masks
+            else:
+                # 背景图或 crop 后空目标样本也需要空 mask 字段，供 MaskDINO target padding 使用。
+                instances.gt_masks = torch.zeros((0, h, w), dtype=torch.uint8)
 
             dataset_dict["instances"] = instances
         return dataset_dict
+
+    def _apply_crop_with_nonempty_fallback(self, image, annotations):
+        """
+        对有目标图片进行 random crop 时，尽量避免把所有实例都裁掉。
+
+        裂缝目标通常细长且面积小，普通 random crop 容易产生空目标训练样本；
+        这里仅在 crop 分支中做有限重试，失败后回退到非 crop 多尺度增强。
+        """
+        crop_tfm_gens = self.tfm_gens[:-1] + self.crop_gen + self.tfm_gens[-1:]
+        valid_annotations = [ann for ann in annotations if ann.get("iscrowd", 0) == 0]
+        if not valid_annotations:
+            return T.apply_transform_gens(crop_tfm_gens, image)
+
+        for _ in range(self.crop_retry):
+            cropped_image, transforms = T.apply_transform_gens(crop_tfm_gens, image)
+            if self._has_nonempty_instances(valid_annotations, transforms, cropped_image.shape[:2]):
+                return cropped_image, transforms
+        return T.apply_transform_gens(self.tfm_gens, image)
+
+    def _has_nonempty_instances(self, annotations, transforms, image_shape):
+        transformed_annotations = [
+            utils.transform_instance_annotations(copy.deepcopy(obj), transforms, image_shape)
+            for obj in annotations
+        ]
+        instances = utils.annotations_to_instances(transformed_annotations, image_shape)
+        instances = utils.filter_empty_instances(instances)
+        return len(instances) > 0
